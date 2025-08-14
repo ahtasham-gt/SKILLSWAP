@@ -1,0 +1,154 @@
+.swap-card {
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  border: 1px solid var(--border-color);
+}
+
+.swap-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.swap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.swap-users {
+  flex: 1;
+}
+
+.user-pair {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.user-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.swap-arrow {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.swap-names {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.swap-arrow-text {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.swap-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-accepted {
+  background-color: rgb(16 185 129 / 0.1);
+  color: var(--secondary-color);
+}
+
+.status-pending {
+  background-color: rgb(245 158 11 / 0.1);
+  color: var(--accent-color);
+}
+
+.status-rejected {
+  background-color: rgb(239 68 68 / 0.1);
+  color: #ef4444;
+}
+
+.swap-content {
+  margin-bottom: 1rem;
+}
+
+.swap-skill {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.swap-message {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.swap-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.swap-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.swap-date,
+.swap-updated {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.swap-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .swap-card {
+    padding: 1rem;
+  }
+  
+  .swap-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .swap-footer {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .swap-actions {
+    width: 100%;
+  }
+  
+  .swap-actions .btn {
+    flex: 1;
+  }
+} 

@@ -1,0 +1,38 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  position: relative;
+}
+
+.content {
+  flex: 1;
+  padding: 2rem 0;
+  transition: var(--transition);
+  margin-left: 280px; 
+}
+
+.content.sidebar-open {
+  margin-left: 280px; 
+}
+
+@media (max-width: 1023px) {
+  .content {
+    margin-left: 0;
+  }
+  
+  .content.sidebar-open {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: 1rem 0;
+  }
+} 
