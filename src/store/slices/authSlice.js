@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-// Async thunks for API calls
+
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (credentials, { rejectWithValue }) => {
     try {
-      // Simulate API call
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Mock user data
