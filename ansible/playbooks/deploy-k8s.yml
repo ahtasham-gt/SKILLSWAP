@@ -1,0 +1,24 @@
+- hosts: minikube
+  become: true
+  tasks:
+
+    - name: Create k8s directory for manifests
+      become_user: ubuntu
+      file:
+        path: /home/ubuntu/k8s
+        state: directory
+        mode: '0755'
+
+    - name: Copy deployment file
+      copy:
+        src: ../../k8s/skillswap-deployment.yaml
+        dest: /home/ubuntu/k8s/skillswap-deployment.yaml
+        owner: ubuntu
+        mode: '0644'
+
+    - name: Apply deployment manifest
+      become_user: ubuntu
+      environment:
+        KUBECONFIG: /home/ubuntu/.kube/config
+      shell: |
+        kubectl apply -f /home/ubuntu/k8s/skillswap-deployment.yaml

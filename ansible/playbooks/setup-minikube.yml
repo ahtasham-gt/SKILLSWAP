@@ -1,0 +1,82 @@
+- hosts: minikube
+  become: true
+  vars:
+    minikube_driver: docker
+    minikube_memory: 1536   # 1.5GB (stable for t3.small)
+    minikube_cpus: 2        # t3.small has 2 vCPUs
+  tasks:
+
+    - name: Update apt
+      apt:
+        update_cache: yes
+
+    - name: Install dependencies
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg
+        - lsb-release
+        - software-properties-common
+
+    - name: Install Docker
+      shell: |
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sh get-docker.sh
+      args:
+        creates: /usr/bin/docker
+
+    - name: Add ubuntu user to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    - name: Install kubectl
+      shell: |
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        mv kubectl /usr/local/bin/
+      args:
+        creates: /usr/local/bin/kubectl
+
+    - name: Install minikube
+      get_url:
+        url: https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        dest: /usr/local/bin/minikube
+        mode: '0755'
+
+    - name: Create .kube directory
+      become_user: ubuntu
+      file:
+        path: /home/ubuntu/.kube
+        state: directory
+        mode: '0755'
+
+    - name: Start minikube (optimized for t3.small)
+      become_user: ubuntu
+      environment:
+        KUBECONFIG: /home/ubuntu/.kube/config
+      shell: |
+        minikube start \
+          --driver={{ minikube_driver }} \
+          --memory={{ minikube_memory }} \
+          --cpus={{ minikube_cpus }} \
+          --force \
+          --extra-config=kubeadm.ignore-preflight-errors=NumCPU \
+          --extra-config=kubelet.housekeeping-interval=10m \
+          --extra-config=kubelet.cgroups-per-qos=false \
+          --extra-config=kubelet.enforce-node-allocatable="" 
+      args:
+        creates: /home/ubuntu/.minikube
+
+    - name: Disable heavy minikube addons
+      become_user: ubuntu
+      shell: |
+        minikube addons disable metrics-server || true
+        minikube addons disable dashboard || true
+      environment:
+        KUBECONFIG: /home/ubuntu/.kube/config
