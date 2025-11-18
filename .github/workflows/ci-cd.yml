@@ -46,34 +46,36 @@ jobs:
     needs: build_and_push
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
-      - name: Copy SSH key
-        run: |
-          echo "${{ secrets.EC2_SSH_KEY }}" > ec2key.pem
-          chmod 600 ec2key.pem
+    - name: Copy SSH key
+      run: |
+        echo "${{ secrets.EC2_SSH_KEY }}" > ec2key.pem
+        chmod 600 ec2key.pem
 
-      - name: Add EC2 Host to Known Hosts
-        run: |
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+    - name: Add EC2 Host to Known Hosts
+      run: |
+        mkdir -p ~/.ssh
+        touch ~/.ssh/known_hosts
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: SSH → Run Deployment Script on EC2
-        run: |
-          ssh -i ec2key.pem ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-            set -e
+    - name: SSH → Run Deployment Script on EC2
+      run: |
+        ssh -i ec2key.pem ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+          set -e
 
-            # Pull latest repo
-            if [ ! -d "skillswap" ]; then
-              git clone https://github.com/${GITHUB_REPOSITORY}.git skillswap
-            else
-              cd skillswap && git pull && cd ..
-            fi
+          # Clone repo if not exists
+          if [ ! -d "skillswap" ]; then
+            git clone https://github.com/${GITHUB_REPOSITORY}.git skillswap
+          else
+            cd skillswap && git pull && cd ..
+          fi
 
-            # Navigate into the repo
-            cd skillswap
+          cd skillswap
 
-            # Run Ansible to install minikube + deploy app
-            ansible-playbook -i ansible/inventory.ini ansible/playbooks/setup-minikube.yml
-            ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy-k8s.yml
-          EOF
+          # Run Ansible
+          ansible-playbook -i ansible/inventory.ini ansible/playbooks/setup-minikube.yml
+          ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy-k8s.yml
+        EOF
+
