@@ -67,7 +67,7 @@ jobs:
 
           # Clone repo if not exists
           if [ ! -d "skillswap" ]; then
-            git clone https://github.com/${GITHUB_REPOSITORY}.git skillswap
+            git clone https://github.com/ahtasham-gt/SKILLSWAP skillswap
           else
             cd skillswap && git pull && cd ..
           fi
