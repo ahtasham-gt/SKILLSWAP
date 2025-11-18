@@ -2,11 +2,11 @@
   become: true
   tasks:
 
-    - name: apt update
+    - name: Update apt
       apt:
         update_cache: yes
 
-    - name: Install Nagios + Apache
+    - name: Install Nagios Core + Apache
       apt:
         name: "{{ item }}"
         state: present
@@ -22,7 +22,12 @@
         state: started
         enabled: yes
 
-    - name: Copy Nagios check config
+    - name: Create directory for Nagios configs
+      file:
+        path: /etc/nagios3/conf.d
+        state: directory
+
+    - name: Copy Skillswap monitoring config
       copy:
         src: ../../../nagios/conf.d/skillswap.cfg
         dest: /etc/nagios3/conf.d/skillswap.cfg

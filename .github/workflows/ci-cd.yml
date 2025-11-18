@@ -5,7 +5,6 @@ on:
     branches: ["main"]
 
 jobs:
-
   build_and_push:
     name: Build React → Docker → Push to DockerHub
     runs-on: ubuntu-latest
@@ -39,43 +38,60 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USER }}/${{ secrets.IMAGE_NAME }}:latest
           platforms: linux/amd64
 
-
   deploy:
     name: Deploy to EC2 via Ansible
     runs-on: ubuntu-latest
     needs: build_and_push
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Copy SSH key
-      run: |
-        echo "${{ secrets.EC2_SSH_KEY }}" > ec2key.pem
-        chmod 600 ec2key.pem
+      - name: Copy SSH key
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > ec2key.pem
+          chmod 600 ec2key.pem
 
-    - name: Add EC2 Host to Known Hosts
-      run: |
-        mkdir -p ~/.ssh
-        touch ~/.ssh/known_hosts
-        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+      - name: Add EC2 Host to Known Hosts
+        run: |
+          mkdir -p ~/.ssh
+          touch ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-    - name: SSH → Run Deployment Script on EC2
-      run: |
-        ssh -i ec2key.pem ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-          set -e
+      - name: SSH → Run Deployment Script on EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ec2key.pem ubuntu@${EC2_HOST} <<'EOF'
+            set -e
 
-          # Clone repo if not exists
-          if [ ! -d "skillswap" ]; then
-            git clone https://github.com/ahtasham-gt/SKILLSWAP skillswap
-          else
-            cd skillswap && git pull && cd ..
-          fi
+            # Install ansible + git if missing
+            sudo apt update -y
+            sudo apt install -y ansible git
 
-          cd skillswap
+            # Clone or update repo
+            if [ ! -d "/home/ubuntu/skillswap" ]; then
+              git clone https://github.com/${GITHUB_REPOSITORY}.git /home/ubuntu/skillswap
+            else
+              cd /home/ubuntu/skillswap && git pull && cd ..
+            fi
 
-          # Run Ansible
-          ansible-playbook -i ansible/inventory.ini ansible/playbooks/setup-minikube.yml
-          ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy-k8s.yml
-        EOF
+            cd /home/ubuntu/skillswap
 
+            # Place SSH key for Ansible to connect to Nagios EC2
+            mkdir -p /home/ubuntu/.ssh
+            cat <<KEY > /home/ubuntu/.ssh/skillswap.pem ${{ secrets.EC2_SSH_KEY }} KEY
+            chmod 600 /home/ubuntu/.ssh/skillswap.pem
+
+            export ANSIBLE_HOST_KEY_CHECKING=False
+
+            # Run local minikube setup
+            ansible-playbook -i ansible/inventory.ini ansible/playbooks/setup-minikube.yml
+
+            # Deploy app to Kubernetes
+            ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy-k8s.yml
+
+            # Install Nagios on second EC2 (requires SSH)
+            ansible-playbook -i ansible/inventory.ini ansible/playbooks/setup-nagios.yml      
+            
+          EOF
